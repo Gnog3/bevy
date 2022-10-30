@@ -4,13 +4,14 @@ use crate::{
     PointLight, PointLightShadowMap, SetMeshBindGroup, SpotLight, VisiblePointLights,
     SHADOW_SHADER_HANDLE,
 };
-use bevy_asset::Handle;
+use bevy_asset::{Handle, HandleUntyped};
 use bevy_core_pipeline::core_3d::Transparent3d;
 use bevy_ecs::{
     prelude::*,
     system::{lifetimeless::*, SystemParamItem},
 };
 use bevy_math::{Mat4, UVec3, UVec4, Vec2, Vec3, Vec3Swizzles, Vec4, Vec4Swizzles};
+use bevy_reflect::TypeUuid;
 use bevy_render::{
     camera::{Camera, CameraProjection},
     color::Color,
@@ -334,9 +335,16 @@ impl SpecializedMeshPipeline for ShadowPipeline {
 
         let vertex_buffer_layout = layout.get_layout(&vertex_attributes)?;
 
+        let custom = vertex_buffer_layout.attributes[0].format == VertexFormat::Uint16x4;
+
         Ok(RenderPipelineDescriptor {
             vertex: VertexState {
-                shader: SHADOW_SHADER_HANDLE.typed::<Shader>(),
+                shader: if !custom {
+                    SHADOW_SHADER_HANDLE.typed::<Shader>()
+                } else {
+                    HandleUntyped::weak_from_u64(Shader::TYPE_UUID, 456798293459876992)
+                        .typed::<Shader>()
+                },
                 entry_point: "vertex".into(),
                 shader_defs,
                 buffers: vec![vertex_buffer_layout],
@@ -369,7 +377,11 @@ impl SpecializedMeshPipeline for ShadowPipeline {
                 },
             }),
             multisample: MultisampleState::default(),
-            label: Some("shadow_pipeline".into()),
+            label: if !custom {
+                Some("shadow_pipeline".into())
+            } else {
+                Some("custom_shadow_pipeline".into())
+            },
         })
     }
 }

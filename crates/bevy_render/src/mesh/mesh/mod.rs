@@ -477,12 +477,6 @@ impl InnerMeshVertexBufferLayout {
                     offset: layout_attribute.offset,
                     shader_location: attribute_descriptor.shader_location,
                 });
-            } else {
-                return Err(MissingVertexAttributeError {
-                    id: attribute_descriptor.id,
-                    name: attribute_descriptor.name,
-                    pipeline_type: None,
-                });
             }
         }
 
@@ -505,6 +499,7 @@ pub struct MissingVertexAttributeError {
 pub struct VertexAttributeDescriptor {
     pub shader_location: u32,
     pub id: MeshVertexAttributeId,
+    #[allow(dead_code)]
     name: &'static str,
 }
 
